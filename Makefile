@@ -7,15 +7,20 @@ else
 	CCLD = $(CC)
 endif
 
-#PKGCONFIGS = 
-#PKGCONFIGS_CFLAGS = $(shell pkg-config --cflags $(PKGCONFIGS))
-#PKGCONFIGS_LDFLAGS = $(shell pkg-config --libs $(PKGCONFIGS))
+PKGCONFIG_PREFIX = /usr
+PKGCONFIGS = apr-1
+PKGCONFIGS_CFLAGS = $(shell \
+	env PKG_CONFIG_LIBDIR=$(PKGCONFIG_PREFIX)/lib/pkgconfig \
+	pkg-config --cflags $(PKGCONFIGS) \
+)
+PKGCONFIGS_LDFLAGS = $(shell \
+	env PKG_CONFIG_LIBDIR=$(PKGCONFIG_PREFIX)/lib/pkgconfig \
+	pkg-config --libs $(PKGCONFIGS) \
+)
 
-CFLAGS = $(shell pkg-config --cflags apr-1) -Os -Wall -ggdb \
-	-ffunction-sections -fdata-sections
+CFLAGS = -Os -Wall -ggdb -ffunction-sections -fdata-sections
 CXXFLAGS = $(CFLAGS) -std=c++11
-LDFLAGS = -Llib -lapr-1 \
-	-static-libgcc -Wl,--as-needed,--gc-sections
+LDFLAGS = -static-libgcc -Wl,--as-needed,--gc-sections
 
 ALL_CFLAGS = $(PKGCONFIGS_CFLAGS) $(CFLAGS)
 ALL_CXXFLAGs = $(PKGCONFIGS_CFLAGS) $(CXXFLAGS)
