@@ -18,8 +18,15 @@
 // override mingw's stack checking
 void __chkstk_ms () { return; }
 
-static int keep_variable (void *base, size_t size)
+static int keep_variable (void *base)
 {
+	union {
+		jmp_buf env;
+		void *dummy;
+	} un = { .dummy = base };
+	return setjmp (un.env);
+
+	/*
 	jmp_buf env;
 
 	uint8_t *bbase = base;
@@ -29,6 +36,7 @@ static int keep_variable (void *base, size_t size)
 	benv[1] = bbase[size - 1];
 
 	return setjmp (env);
+	*/
 }
 
 static int one = -1;
@@ -71,7 +79,7 @@ static void stack_wrapper (stack_magic_callback callback,
 	jmp_buf parent, jmp_buf child)
 {
 	char dummy[dummysize];
-	keep_variable (dummy, dummysize);
+	keep_variable (dummy);
 
 	stack_magic_switch (child, parent, STACK_SJLJ_STARTING);
 
@@ -87,7 +95,7 @@ void stack_magic_setup (void *stackbase, size_t stacksize,
 	stack_magic_callback callback, void *data)
 {
 	if (one < 0)
-		one = keep_variable (&callback, sizeof (stack_magic_callback)) + 1;
+		one = keep_variable (&callback) + 1;
 
 	uintptr_t target = (uintptr_t) stackbase;
 	uintptr_t source = (uintptr_t) &target;
