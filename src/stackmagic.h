@@ -12,6 +12,7 @@ enum stack_sjlj
 	STACK_SJLJ_RUNNING = 2,
 	STACK_SJLJ_STARTING,
 	STACK_SJLJ_STOPPING,
+	STACK_SJLJ_LENGTH,
 };
 
 typedef void (*stack_magic_callback)(void *, jmp_buf, jmp_buf);

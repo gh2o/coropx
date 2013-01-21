@@ -11,7 +11,7 @@ endif
 #PKGCONFIGS_CFLAGS = $(shell pkg-config --cflags $(PKGCONFIGS))
 #PKGCONFIGS_LDFLAGS = $(shell pkg-config --libs $(PKGCONFIGS))
 
-CFLAGS = $(shell pkg-config --cflags apr-1) -Os -Wall
+CFLAGS = $(shell pkg-config --cflags apr-1) -Os -Wall -ggdb
 CXXFLAGS = $(CFLAGS) -std=c++11
 LDFLAGS = -Llib -lapr-1 \
 	-static-libgcc -Wl,--as-needed,--gc-sections

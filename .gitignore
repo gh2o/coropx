@@ -1,4 +1,6 @@
 /coropx
+/bin/
+/dep/
 /old/
 /lib/
 .*.swp
