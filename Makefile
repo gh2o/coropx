@@ -1,5 +1,6 @@
-CC = clang
-CXX = clang++
+CC = gcc
+CXX = g++
+PREFIX = /usr
 
 ifneq ($(wildcard src/*.cpp),)
 	CCLD = $(CXX)
@@ -7,19 +8,18 @@ else
 	CCLD = $(CC)
 endif
 
-PKGCONFIG_PREFIX = /usr
 PKGCONFIGS = apr-1
 PKGCONFIGS_CFLAGS = $(shell \
-	env PKG_CONFIG_LIBDIR=$(PKGCONFIG_PREFIX)/lib/pkgconfig \
+	env PKG_CONFIG_LIBDIR=$(PREFIX)/lib/pkgconfig \
 	pkg-config --cflags $(PKGCONFIGS) \
 )
 PKGCONFIGS_LDFLAGS = $(shell \
-	env PKG_CONFIG_LIBDIR=$(PKGCONFIG_PREFIX)/lib/pkgconfig \
+	env PKG_CONFIG_LIBDIR=$(PREFIX)/lib/pkgconfig \
 	pkg-config --libs $(PKGCONFIGS) \
 )
 
-CFLAGS = -Os -Wall -ggdb -ffunction-sections -fdata-sections
-CXXFLAGS = $(CFLAGS) -std=c++11
+CFLAGS = -O3 -Wall -std=c99 -ggdb
+CXXFLAGS = -O3 -Wall -std=c++11
 LDFLAGS = -static-libgcc -Wl,--as-needed,--gc-sections
 
 ALL_CFLAGS = $(PKGCONFIGS_CFLAGS) $(CFLAGS)

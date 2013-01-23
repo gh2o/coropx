@@ -122,7 +122,7 @@ int fiber_manager_iterate (FiberManager *fm)
 		case FIBER_SJLJ_RETURNED:
 			break;
 		default:
-			fprintf (stderr, "unknown fiber sjlj %d!\n", res);
+			abort ();
 			break;
 	}
 

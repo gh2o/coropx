@@ -18,28 +18,20 @@
 // override mingw's stack checking
 void __chkstk_ms () { return; }
 
-static int keep_variable (void *base)
-{
-	union {
-		jmp_buf env;
-		void *dummy;
-	} un = { .dummy = base };
-	return setjmp (un.env);
-
-	/*
-	jmp_buf env;
-
-	uint8_t *bbase = base;
-	uint8_t *benv = (uint8_t *) env;
-
-	benv[0] = bbase[0];
-	benv[1] = bbase[size - 1];
-
-	return setjmp (env);
-	*/
-}
-
 static int one = -1;
+
+static void keep_variable (void *base)
+{
+	if (one < 0)
+	{
+		union {
+			jmp_buf env;
+			void *dummy;
+		} un;
+		un.dummy = base;
+		one = setjmp (un.env) + 1;
+	}
+}
 
 enum stack_direction
 {
@@ -69,11 +61,6 @@ static enum stack_direction detect_stack_direction (void *before)
 	return stack_direction_cached;
 }
 
-static enum stack_direction detect_stack_direction_wrong (void *before)
-{
-	return STACK_DIRECTION_UNKNOWN;
-}
-
 static void stack_wrapper (stack_magic_callback callback,
 	void *data, size_t dummysize,
 	jmp_buf parent, jmp_buf child)
@@ -94,17 +81,14 @@ void stack_magic_setup (void *stackbase, size_t stacksize,
 	jmp_buf parent, jmp_buf child,
 	stack_magic_callback callback, void *data)
 {
-	if (one < 0)
-		one = keep_variable (&callback) + 1;
+	keep_variable (detect_stack_direction);
+	keep_variable (stack_wrapper);
 
 	uintptr_t target = (uintptr_t) stackbase;
 	uintptr_t source = (uintptr_t) &target;
 
 	size_t dummysize;
-	enum stack_direction (*dsdfunc)(void *) = one ?
-		detect_stack_direction : detect_stack_direction_wrong;
-
-	switch (dsdfunc (&dummysize))
+	switch (detect_stack_direction (&dummysize))
 	{
 		case STACK_DIRECTION_DOWN:
 			dummysize = source - (target + stacksize) + STACK_SAFETY_MARGIN;
