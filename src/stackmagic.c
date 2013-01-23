@@ -61,6 +61,11 @@ static enum stack_direction detect_stack_direction (void *before)
 	return stack_direction_cached;
 }
 
+static enum stack_direction detect_stack_direction_wrong (void *before)
+{
+	return STACK_DIRECTION_UNKNOWN;
+}
+
 static void stack_wrapper (stack_magic_callback callback,
 	void *data, size_t dummysize,
 	jmp_buf parent, jmp_buf child)
@@ -77,18 +82,31 @@ static void stack_wrapper (stack_magic_callback callback,
 		stack_magic_switch (child, parent, STACK_SJLJ_STOPPING);
 }
 
+static void stack_wrapper_wrong (stack_magic_callback callback,
+	void *data, size_t dummysize,
+	jmp_buf parent, jmp_buf child)
+{
+}
+
 void stack_magic_setup (void *stackbase, size_t stacksize,
 	jmp_buf parent, jmp_buf child,
 	stack_magic_callback callback, void *data)
 {
 	keep_variable (detect_stack_direction);
+	keep_variable (detect_stack_direction_wrong);
 	keep_variable (stack_wrapper);
+	keep_variable (stack_wrapper_wrong);
+
+	enum stack_direction (*dsdfunc)(void *) = one ?
+		detect_stack_direction : detect_stack_direction_wrong;
+	void (*swfunc)(stack_magic_callback, void *, size_t, jmp_buf, jmp_buf) = one ?
+		stack_wrapper : stack_wrapper_wrong;
 
 	uintptr_t target = (uintptr_t) stackbase;
 	uintptr_t source = (uintptr_t) &target;
 
 	size_t dummysize;
-	switch (detect_stack_direction (&dummysize))
+	switch (dsdfunc (&dummysize))
 	{
 		case STACK_DIRECTION_DOWN:
 			dummysize = source - (target + stacksize) + STACK_SAFETY_MARGIN;
@@ -102,7 +120,7 @@ void stack_magic_setup (void *stackbase, size_t stacksize,
 	}
 
 	if (setjmp (parent) == STACK_SJLJ_INITIAL)
-		stack_wrapper (callback, data, dummysize, parent, child);
+		swfunc (callback, data, dummysize, parent, child);
 }
 
 int stack_magic_switch (jmp_buf source, jmp_buf target, int num)

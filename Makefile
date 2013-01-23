@@ -18,9 +18,11 @@ PKGCONFIGS_LDFLAGS = $(shell \
 	pkg-config --libs $(PKGCONFIGS) \
 )
 
-CFLAGS = -O3 -Wall -std=c99 -ggdb
-CXXFLAGS = -O3 -Wall -std=c++11
-LDFLAGS = -static-libgcc -Wl,--as-needed,--gc-sections
+COMMONFLAGS = -Os
+CFLAGS = $(COMMONFLAGS) -Wall -std=c99 -ggdb
+CXXFLAGS = $(COMMONFLAGS) -Wall -std=c++11
+LDFLAGS = $(COMMONFLAGS) -static-libgcc \
+	-Wl,--as-needed,--gc-sections,--emit-relocs
 
 ALL_CFLAGS = $(PKGCONFIGS_CFLAGS) $(CFLAGS)
 ALL_CXXFLAGs = $(PKGCONFIGS_CFLAGS) $(CXXFLAGS)
